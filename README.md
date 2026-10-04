@@ -1,2 +1,653 @@
-# ZM
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZM Tuition - Old Bus Stand, Nakur</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --sub: #475569;
+      --border: #e2e8f0;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --warning: #eab308;
+      --radius: 12px;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f8fafc;
+      --sub: #94a3b8;
+      --border: #334155;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 60px; line-height: 1.5; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 16px; }
+    
+    header.top { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+    .brand h1 { font-size: 1.25rem; color: var(--primary); }
+    .brand p { font-size: 0.85rem; color: var(--sub); }
+    
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow); }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media(max-width: 500px){ .row2 { grid-template-columns: 1fr; } }
+    
+    .f { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; font-size: 0.9rem; font-weight: 500; }
+    input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+    
+    .btn { padding: 10px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--border); color: var(--text); }
+    .btn.primary { background: var(--primary); color: #fff; }
+    .btn.danger { background: var(--danger); color: #fff; }
+    .btn.sm { padding: 6px 12px; font-size: 0.85rem; }
+    
+    .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 8px 0; }
+    .nav button { background: none; border: none; color: var(--sub); font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+    .nav button.active { color: var(--primary); font-weight: bold; }
+    
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 100; }
+    .modal { background: var(--card); padding: 20px; border-radius: var(--radius); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+    .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    
+    .badge { padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .badge.p { background: #dcfce7; color: #15803d; }
+    .badge.a { background: #fee2e2; color: #b91c1c; }
+    
+    #splash { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; transition: opacity 0.5s; }
+    #splash.out { opacity: 0; pointer-events: none; }
+  </style>
+</head>
+<body>
+
+<div id="splash">
+  <h2>ZM Tuition</h2>
+  <p>Old Bus Stand, Nakur</p>
+</div>
+
+<div id="app"></div>
+
+<script>
+/* ---------- State & LocalStorage Helpers ---------- */
+const DEFAULT_SETTINGS = {
+  name: "ZM Tuition",
+  place: "Old Bus Stand, Nakur",
+  phone: "9758535093",
+  adminHash: "" // Sha-256 password hash
+};
+
+const ADMINS = {
+  zoya: { name: "Zoya", subject: "Commerce" },
+  muskan: { name: "Muskan", subject: "Maths & Science" }
+};
+
+let S = {
+  settings: DEFAULT_SETTINGS,
+  students: [],
+  batches: [
+    { id: 'b1', name: 'Class 11 & 12 Commerce', subject: 'Commerce', start: '15:00', end: '16:00', fee: 1000, teacher: 'zoya' },
+    { id: 'b2', name: 'Class 9 Maths & Science', subject: 'Maths & Science', start: '16:00', end: '17:00', fee: 500, teacher: 'muskan' },
+    { id: 'b3', name: 'Class 10 Maths & Science', subject: 'Maths & Science', start: '16:00', end: '17:00', fee: 500, teacher: 'muskan' },
+    { id: 'b4', name: 'Class 11 & 12 Maths & Science', subject: 'Maths & Science', start: '17:00', end: '18:00', fee: 1000, teacher: 'muskan' }
+  ],
+  att: {},
+  fees: [],
+  tests: [],
+  notes: [],
+  notices: []
+};
+
+let ui = { role: null, me: null, tab: 'home', lwho: 'zoya', lt: 'admin', attDate: today(), attBatch: 'b1', feeMonth: ym(new Date()), calMonth: ym(new Date()), q: '' };
+
+function $(s){ return document.querySelector(s); }
+function today(){ return new Date().toISOString().split('T')[0]; }
+function ym(d){ return d.toISOString().slice(0,7); }
+function uid(){ return Math.random().toString(36).substr(2, 9); }
+function esc(str){ return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function v(id){ const el=$('#'+id); return el ? el.value.trim() : ''; }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+async function sha(str){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function loadLocal(){
+  const data = localStorage.getItem('zm_data');
+  if(data){ try { S = JSON.parse(data); } catch(e){} }
+  if(!S.settings) S.settings = DEFAULT_SETTINGS;
+}
+function saveLocal(){ localStorage.setItem('zm_data', JSON.stringify(S)); }
+
+function put(col, item){
+  const idx = S[col].findIndex(x => x.id === item.id);
+  if(idx >= 0) S[col][idx] = item; else S[col].push(item);
+  saveLocal();
+}
+function del(col, id){ S[col] = S[col].filter(x => x.id !== id); saveLocal(); }
+function putSettings(){ saveLocal(); }
+function putAtt(d, b){ saveLocal(); }
+
+function getSession(){ return JSON.parse(sessionStorage.getItem('zm_sess')); }
+function setSession(s){ if(s) sessionStorage.setItem('zm_sess', JSON.stringify(s)); else sessionStorage.removeItem('zm_sess'); }
+function themePref(){ return document.documentElement.getAttribute('data-theme'); }
+function setTheme(t){ document.documentElement.setAttribute('data-theme', t); }
+
+function toast(msg){
+  const div = document.createElement('div');
+  div.style.cssText = "position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 16px;border-radius:20px;z-index:300;font-size:0.85rem;";
+  div.textContent = msg;
+  document.body.appendChild(div);
+  setTimeout(()=>div.remove(), 2500);
+}
+
+function openModal(html){
+  closeModal();
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.id = 'activeModal';
+  bg.innerHTML = `<div class="modal">${html}</div>`;
+  document.body.appendChild(bg);
+}
+function closeModal(){ const m=$('#activeModal'); if(m) m.remove(); }
+function sheetHead(title){ return `<div class="sheet-head"><h3>${title}</h3><button class="btn sm" data-act="closeModal">✕</button></div>`; }
+
+function askConfirm(msg, btnText, callback){
+  ui.ask = callback;
+  openModal(`${sheetHead('Confirm Action')}
+    <p style="margin-bottom:16px">${msg}</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" data-act="closeModal">Cancel</button>
+      <button class="btn danger" data-act="askYes">${btnText}</button>
+    </div>`);
+}
+
+function ic(name){ return ''; } // Simplified icons placeholder
+function themeBtn(){ return `<button class="btn sm" data-act="theme">🌓</button>`; }
+
+/* ---------- Helpers & Lookup ---------- */
+function studentOf(id){ return S.students.find(x => x.id === id); }
+function batchOf(id){ return S.batches.find(x => x.id === id); }
+function studentsOf(batchId){ return S.students.filter(s => (s.batchIds||[]).includes(batchId)); }
+function dueFor(s, month){ return s.fee || 500; }
+
+/* ---------- Views ---------- */
+function render(){
+  const app = $('#app');
+  if(!ui.role){ app.innerHTML = loginView(); return; }
+  if(ui.role === 'student'){ app.innerHTML = studentShell(); return; }
+  
+  app.innerHTML = `
+    <div class="wrap">
+      <header class="top">
+        <div class="brand"><h1>${esc(S.settings.name)}</h1><p>${esc(S.settings.place)}</p></div>
+        <div>${themeBtn()} <button class="btn sm danger" data-act="logout">Logout</button></div>
+      </header>
+      <main>${renderTab()}</main>
+    </div>
+    <nav class="nav">
+      <button class="${ui.tab==='home'?'active':''}" data-act="tab" data-t="home">Home</button>
+      <button class="${ui.tab==='att'?'active':''}" data-act="tab" data-t="att">Attendance</button>
+      <button class="${ui.tab==='students'?'active':''}" data-act="tab" data-t="students">Students</button>
+      <button class="${ui.tab==='fees'?'active':''}" data-act="tab" data-t="fees">Fees</button>
+      <button class="${ui.tab==='settings'?'active':''}" data-act="tab" data-t="settings">Settings</button>
+    </nav>`;
+}
+
+function go(t){ ui.tab = t; render(); }
+
+function loginView(){
+  return `<div class="wrap" style="max-width:400px;margin-top:40px;">
+    <div class="card">
+      <h2 style="text-align:center;margin-bottom:16px">${esc(S.settings.name)}</h2>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="btn ${ui.lt==='admin'?'primary':''}" style="flex:1" data-act="ltab" data-t="admin">Admin</button>
+        <button class="btn ${ui.lt==='student'?'primary':''}" style="flex:1" data-act="ltab" data-t="student">Student</button>
+      </div>
+      ${ui.lt==='admin'?`
+        <label class="f">Teacher
+          <select id="lWho">${Object.keys(ADMINS).map(k=>`<option value="${k}" ${ui.lwho===k?'selected':''}>${ADMINS[k].name}</option>`).join('')}</select>
+        </label>
+        <label class="f">Password <input id="lPass" type="password" placeholder="Enter password"></label>
+        <button class="btn primary" style="width:100%" data-act="doLogin">Login as Teacher</button>
+      `:`
+        <label class="f">Roll No / Phone <input id="lStuId" placeholder="Enter Roll No or Phone"></label>
+        <label class="f">Password <input id="lStuPass" type="password" placeholder="Enter Password"></label>
+        <button class="btn primary" style="width:100%" data-act="doLogin">Login as Student</button>
+      `}
+    </div>
+  </div>`;
+}
+
+async function doLogin(){
+  if(ui.lt === 'admin'){
+    const pw = v('lPass');
+    if(S.settings.adminHash){
+      const h = await sha(pw);
+      if(h !== S.settings.adminHash){ toast('Invalid Admin Password'); return; }
+    }
+    ui.who = v('lWho') || 'zoya';
+    ui.role = 'admin';
+    setSession({ role: 'admin', who: ui.who });
+  } else {
+    const id = v('lStuId');
+    const pw = v('lStuPass');
+    const s = S.students.find(x => x.roll === id || x.phone === id || x.id === id);
+    if(!s){ toast('Student not found'); return; }
+    if(s.pwHash){
+      const h = await sha(pw);
+      if(h !== s.pwHash){ toast('Invalid Password'); return; }
+    }
+    ui.role = 'student';
+    ui.me = s.id;
+    setSession({ role: 'student', id: s.id });
+  }
+  render();
+}
+
+function renderTab(){
+  if(ui.tab === 'home') return vHome();
+  if(ui.tab === 'att') return vAtt();
+  if(ui.tab === 'students') return vStudents();
+  if(ui.tab === 'fees') return vFees();
+  if(ui.tab === 'settings') return vSettings();
+  return '';
+}
+
+function vHome(){
+  return `<div class="card">
+    <h3>Welcome, Teacher ${ADMINS[ui.who||'zoya']?.name}</h3>
+    <p style="color:var(--sub)">Select a tab below to manage daily attendance, student records, fee collection, or test updates.</p>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h4>Notice Board</h4>
+      <button class="btn sm primary" data-act="addNotice">+ Notice</button>
+    </div>
+    ${S.notices.length===0?'<p style="color:var(--sub)">No notices posted yet.</p>':
+      S.notices.map(n=>`<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+        <strong>${esc(n.title)}</strong> <small style="color:var(--sub)">(${n.date})</small>
+        <p>${esc(n.text)}</p>
+        <button class="btn sm danger" style="margin-top:4px" data-act="delNotice" data-id="${n.id}">Delete</button>
+      </div>`).join('')}
+  </div>`;
+}
+
+function vAtt(){
+  return `<div class="card">
+    <h3>Attendance Tracker</h3>
+    <div class="row2" style="margin:12px 0;">
+      <label class="f">Date <input type="date" value="${ui.attDate}" data-change="attDate"></label>
+      <label class="f">Batch
+        <select data-change="attBatch">
+          ${S.batches.map(b=>`<option value="${b.id}" ${ui.attBatch===b.id?'selected':''}>${esc(b.name)}</option>`).join('')}
+        </select>
+      </label>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn sm primary" data-act="allPresent">Mark All Present</button>
+      <button class="btn sm" data-act="clearAtt">Clear All</button>
+    </div>
+    <div id="attBody">${attBody()}</div>
+  </div>`;
+}
+
+function attBody(){
+  const list = studentsOf(ui.attBatch);
+  if(list.length === 0) return '<p style="color:var(--sub)">No students in this batch.</p>';
+  const rec = (S.att[ui.attDate] && S.att[ui.attDate][ui.attBatch]) || {};
+  return list.map(s => {
+    const st = rec[s.id] || '';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div><strong>${esc(s.name)}</strong> <small>(Roll: ${esc(s.roll||'-')})</small></div>
+      <div>
+        <button class="btn sm ${st==='P'?'primary':''}" data-act="mark" data-s="${s.id}" data-v="P">P</button>
+        <button class="btn sm ${st==='A'?'danger':''}" data-act="mark" data-s="${s.id}" data-v="A">A</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function vStudents(){
+  return `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3>Students (${S.students.length})</h3>
+      <button class="btn sm primary" data-act="addStudent">+ Add Student</button>
+    </div>
+    <input placeholder="Search by name or roll..." data-input="search" value="${esc(ui.q)}" style="margin-bottom:12px">
+    <div id="stuList">${stuList()}</div>
+  </div>`;
+}
+
+function stuList(){
+  const q = ui.q.toLowerCase();
+  const list = S.students.filter(s => s.name.toLowerCase().includes(q) || (s.roll&&s.roll.includes(q)));
+  if(list.length === 0) return '<p style="color:var(--sub)">No students found.</p>';
+  return list.map(s => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <strong>${esc(s.name)}</strong> <small>(Roll: ${esc(s.roll||'-')})</small>
+        <div style="font-size:0.8rem;color:var(--sub)">Class: ${esc(s.cls||'-')} | Phone: ${esc(s.phone||'-')}</div>
+      </div>
+      <div>
+        <button class="btn sm" data-act="editStudent" data-id="${s.id}">Edit</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function studentForm(id){
+  const s = id ? studentOf(id) : { name:'', cls:'', roll:'', phone:'', parent:'', batchIds:[], fee:500, joined:today().slice(0,7) };
+  openModal(`${sheetHead(id?'Edit Student':'Add Student')}
+    <label class="f">Full Name <input id="fName" value="${esc(s.name)}"></label>
+    <div class="row2">
+      <label class="f">Class <input id="fCls" value="${esc(s.cls)}"></label>
+      <label class="f">Roll No <input id="fRoll" value="${esc(s.roll)}"></label>
+    </div>
+    <div class="row2">
+      <label class="f">Phone / WhatsApp <input id="fPhone" value="${esc(s.phone)}"></label>
+      <label class="f">Parent Phone <input id="fParent" value="${esc(s.parent)}"></label>
+    </div>
+    <div class="f"><label>Batches:</label>
+      ${S.batches.map(b => `<label style="font-weight:normal"><input type="checkbox" name="fb" value="${b.id}" ${(s.batchIds\vert{}\vert{}[]).includes(b.id)?'checked':''}>${esc(b.name)}</label>`).join('')}
+    </div>
+    <div class="row2">
+      <label class="f">Monthly Fee (₹) <input id="fFee" type="number" value="${s.fee||500}"></label>
+      <label class="f">Joining Month <input id="fJoin" type="month" value="${s.joined||today().slice(0,7)}"></label>
+    </div>
+    <div class="acts" style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      ${id?`<button class="btn danger" data-act="delStudent" data-id="${id}">Delete</button>`:''}
+      <button class="btn primary" data-act="saveStudent" data-id="${id||''}">Save Student</button>
+    </div>`);
+}
+
+function vFees(){
+  return `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3>Fee Payments</h3>
+      <button class="btn sm primary" data-act="payNew">+ Record Fee</button>
+    </div>
+    <div>
+      ${S.fees.length===0?'<p style="color:var(--sub)">No fee receipts recorded yet.</p>':
+        S.fees.map(f => {
+          const s = studentOf(f.studentId);
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+            <div>
+              <strong>${esc(s?s.name:'Unknown')}</strong> - Month: ${f.month}
+              <div style="font-size:0.8rem;color:var(--sub)">Amount: ₹${f.amount} (${f.mode\vert{}\vert{}'Cash'}) - Date:${f.date}</div>
+            </div>
+            <button class="btn sm" data-act="receipt" data-id="${f.id}">Receipt</button>
+          </div>`;
+        }).join('')}
+    </div>
+  </div>`;
+}
+
+function payForm(sid){
+  openModal(`${sheetHead('Record Fee Payment')}
+    <label class="f">Student
+      <select id="pStu" data-change="payCalc">
+        <option value="">-- Select Student --</option>
+        ${S.students.map(s => `<option value="${s.id}" ${s.id===sid?'selected':''}>${esc(s.name)} (Roll:${s.roll||'-'})</option>`).join('')}
+      </select>
+    </label>
+    <div class="row2">
+      <label class="f">Month <input id="pMonth" type="month" value="${ym(new Date())}"></label>
+      <label class="f">Amount (₹) <input id="pAmt" type="number" value="500"></label>
+    </div>
+    <div class="row2">
+      <label class="f">Payment Mode
+        <select id="pMode"><option value="Cash">Cash</option><option value="UPI">UPI / Online</option></select>
+      </label>
+      <label class="f">Date <input id="pDate" type="date" value="${today()}"></label>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:12px">
+      <button class="btn primary" data-act="savePay">Save & Print Receipt</button>
+    </div>`);
+}
+
+function receipt(id){
+  const f = S.fees.find(x => x.id === id);
+  if(!f) return;
+  const s = studentOf(f.studentId);
+  openModal(`${sheetHead('Fee Receipt')}
+    <div style="border:1px solid var(--border);padding:16px;border-radius:8px;text-align:center;">
+      <h4>${esc(S.settings.name)}</h4>
+      <p style="font-size:0.8rem;color:var(--sub)">${esc(S.settings.place)} | Ph: ${esc(S.settings.phone)}</p>
+      <hr style="margin:12px 0;border:0;border-top:1px solid var(--border)">
+      <p style="text-align:left"><strong>Student:</strong> ${esc(s?s.name:'-')}</p>
+      <p style="text-align:left"><strong>Roll No:</strong> ${esc(s?s.roll:'-')}</p>
+      <p style="text-align:left"><strong>For Month:</strong> ${f.month}</p>
+      <p style="text-align:left"><strong>Amount Paid:</strong> ₹${f.amount}</p>
+      <p style="text-align:left"><strong>Payment Mode:</strong> ${f.mode}</p>
+      <p style="text-align:left"><strong>Date:</strong> ${f.date}</p>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:12px">
+      <button class="btn primary" onclick="window.print()">Print</button>
+    </div>`);
+}
+
+function vSettings(){
+  const rows = S.batches.map(b => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+    <div><strong>${esc(b.name)}</strong> <small>(₹${b.fee}/mo)</small></div>
+    <button class="btn sm" data-act="editBatch" data-id="${b.id}">Edit</button>
+  </div>`).join('');
+
+  return `<div class="card">
+    <h3>Institute Settings</h3>
+    <label class="f">Institute Name <input id="sName" value="${esc(S.settings.name)}"></label>
+    <label class="f">Address <input id="sPlace" value="${esc(S.settings.place)}"></label>
+    <label class="f">Phone / WhatsApp <input id="sPhone" type="tel" value="${esc(S.settings.phone)}"></label>
+    <div style="margin-top:10px"><button class="btn primary sm" data-act="saveSettings">Save Details</button></div>
+
+    <hr style="margin:20px 0;border:0;border-top:1px solid var(--border)">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h4>Batches</h4>
+      <button class="btn primary sm" data-act="addBatch">+ Add Batch</button>
+    </div>
+    <div>${rows}</div>
+
+    <hr style="margin:20px 0;border:0;border-top:1px solid var(--border)">
+
+    <h4>Admin Security</h4>
+    <label class="f">New Admin Password <input id="sAdminPw" type="password" placeholder="Leave blank to keep current"></label>
+    <button class="btn sm" data-act="changeAdminPw">Update Password</button>
+  </div>`;
+}
+
+function batchForm(id){
+  const b = id ? batchOf(id) : { name:'', subject:'Maths & Science', start:'16:00', end:'17:00', fee:500, teacher:ui.who||'zoya' };
+  openModal(`${sheetHead(id?'Edit Batch':'Add Batch')}
+    <label class="f">Batch Name <input id="bName" value="${esc(b.name)}" placeholder="e.g. Class 10"></label>
+    <div class="row2">
+      <label class="f">Subject <input id="bSub" value="${esc(b.subject)}"></label>
+      <label class="f">Teacher
+        <select id="bTeacher">${Object.keys(ADMINS).map(k=>`<option value="${k}" ${b.teacher===k?'selected':''}>${ADMINS[k].name}</option>`).join('')}</select>
+      </label>
+    </div>
+    <div class="row2">
+      <label class="f">Start Time <input id="bStart" type="time" value="${b.start}"></label>
+      <label class="f">End Time <input id="bEnd" type="time" value="${b.end}"></label>
+    </div>
+    <label class="f">Monthly Fee (₹) <input id="bFee" type="number" value="${b.fee||500}"></label>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      ${id?`<button class="btn danger" data-act="delBatch" data-id="${id}">Delete</button>`:''}
+      <button class="btn primary" data-act="saveBatch" data-id="${id||''}">Save Batch</button>
+    </div>`);
+}
+
+function studentShell(){
+  const s = studentOf(ui.me);
+  if(!s){ setSession(null); ui.role=null; return loginView(); }
+  return `<div class="wrap">
+    <header class="top">
+      <div class="brand"><h1>${esc(S.settings.name)}</h1><p>Student Portal: ${esc(s.name)}</p></div>
+      <div>${themeBtn()} <button class="btn sm danger" data-act="logout">Logout</button></div>
+    </header>
+    <main>
+      <div class="card">
+        <h3>Student Profile</h3>
+        <p><strong>Roll No:</strong> ${esc(s.roll||'-')}</p>
+        <p><strong>Class:</strong> ${esc(s.cls||'-')}</p>
+        <p><strong>Phone:</strong> ${esc(s.phone||'-')}</p>
+        <p><strong>Monthly Fee:</strong> ₹${s.fee||500}</p>
+      </div>
+      <div class="card">
+        <h3>Notice Board</h3>
+        ${S.notices.length===0?'<p style="color:var(--sub)">No notices posted yet.</p>':
+          S.notices.map(n=>`<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+            <strong>${esc(n.title)}</strong> <small style="color:var(--sub)">(${n.date})</small>
+            <p>${esc(n.text)}</p>
+          </div>`).join('')}
+      </div>
+    </main>
+  </div>`;
+}
+
+/* ---------- Event Listeners ---------- */
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('[data-act]');
+  if(!btn) return;
+  const act = btn.dataset.act;
+
+  if(act === 'ltab'){ ui.lt = btn.dataset.t; render(); }
+  else if(act === 'doLogin') doLogin();
+  else if(act === 'logout'){ setSession(null); ui.role=null; ui.me=null; render(); }
+  else if(act === 'theme'){
+    const current = themePref();
+    setTheme(current === 'dark' ? 'light' : 'dark');
+  }
+  else if(act === 'tab') go(btn.dataset.t);
+  else if(act === 'closeModal') closeModal();
+  else if(act === 'askYes'){ if(ui.ask) ui.ask(); closeModal(); }
+  else if(act === 'mark'){
+    const sid = btn.dataset.s, val = btn.dataset.v, d = ui.attDate, b = ui.attBatch;
+    S.att[d] = S.att[d] || {}; S.att[d][b] = S.att[d][b] || {};
+    if(S.att[d][b][sid] === val) delete S.att[d][b][sid]; else S.att[d][b][sid] = val;
+    putAtt(d, b);
+    const elem = $('#attBody'); if(elem) elem.innerHTML = attBody();
+  }
+  else if(act === 'allPresent'){
+    const d = ui.attDate, b = ui.attBatch;
+    S.att[d] = S.att[d] || {}; S.att[d][b] = {};
+    studentsOf(b).forEach(s => { S.att[d][b][s.id] = 'P'; });
+    putAtt(d, b);
+    const elem = $('#attBody'); if(elem) elem.innerHTML = attBody();
+  }
+  else if(act === 'clearAtt'){
+    const d = ui.attDate, b = ui.attBatch;
+    if(S.att[d]) delete S.att[d][b];
+    putAtt(d, b);
+    const elem = $('#attBody'); if(elem) elem.innerHTML = attBody();
+  }
+  else if(act === 'addStudent') studentForm();
+  else if(act === 'editStudent') studentForm(btn.dataset.id);
+  else if(act === 'saveStudent'){
+    const id = btn.dataset.id || uid();
+    const name = v('fName'); if(!name){ toast('Enter student name'); return; }
+    const checkboxes = document.querySelectorAll('input[name="fb"]:checked');
+    const batchIds = Array.from(checkboxes).map(c => c.value);
+    const st = {
+      id, name, cls: v('fCls'), roll: v('fRoll'), phone: v('fPhone'),
+      parent: v('fParent'), batchIds, fee: Number(v('fFee'))||500, joined: v('fJoin')||ym(new Date())
+    };
+    put('students', st); closeModal(); render(); toast('Student saved');
+  }
+  else if(act === 'delStudent'){
+    const id = btn.dataset.id;
+    askConfirm('Delete student permanently?', 'Delete', ()=>{
+      del('students', id); render(); toast('Student deleted');
+    });
+  }
+  else if(act === 'payNew') payForm();
+  else if(act === 'savePay'){
+    const sid = v('pStu'), amt = Number(v('pAmt'));
+    if(!sid || !amt){ toast('Select student and amount'); return; }
+    const pay = { id: uid(), studentId: sid, month: v('pMonth'), amount: amt, mode: v('pMode'), date: v('pDate') };
+    put('fees', pay); closeModal(); render(); receipt(pay.id);
+  }
+  else if(act === 'receipt') receipt(btn.dataset.id);
+  else if(act === 'addNotice'){
+    openModal(`${sheetHead('Add Notice')}
+      <label class="f">Title <input id="nTitle"></label>
+      <label class="f">Text <textarea id="nText"></textarea></label>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px">
+        <button class="btn primary" data-act="saveNotice">Post Notice</button>
+      </div>`);
+  }
+  else if(act === 'saveNotice'){
+    const title = v('nTitle'); if(!title){ toast('Enter title'); return; }
+    const n = { id: uid(), title, text: v('nText'), date: today() };
+    put('notices', n); closeModal(); render(); toast('Notice posted');
+  }
+  else if(act === 'delNotice'){
+    del('notices', btn.dataset.id); render(); toast('Notice deleted');
+  }
+  else if(act === 'addBatch') batchForm();
+  else if(act === 'editBatch') batchForm(btn.dataset.id);
+  else if(act === 'saveBatch'){
+    const id = btn.dataset.id || uid(); const name = v('bName'); if(!name){ toast('Enter batch name'); return; }
+    const b = { id, name, subject: v('bSub'), start: v('bStart'), end: v('bEnd'), fee: Number(v('bFee'))||0, teacher: v('bTeacher') };
+    put('batches', b); closeModal(); render(); toast('Batch saved');
+  }
+  else if(act === 'delBatch'){
+    askConfirm('Delete batch?', 'Delete', ()=>{
+      del('batches', btn.dataset.id); closeModal(); render(); toast('Batch deleted');
+    });
+  }
+  else if(act === 'saveSettings'){
+    S.settings.name = v('sName') || 'ZM Tuition';
+    S.settings.place = v('sPlace') || '';
+    S.settings.phone = v('sPhone') || '';
+    putSettings(); render(); toast('Settings saved');
+  }
+  else if(act === 'changeAdminPw'){
+    const pw = v('sAdminPw'); if(!pw){ toast('Enter new password'); return; }
+    S.settings.adminHash = await sha(pw); putSettings(); toast('Admin password updated');
+  }
+});
+
+document.addEventListener('change', e => {
+  const t = e.target, act = t.dataset.change;
+  if(act === 'attBatch'){ ui.attBatch = t.value; const elem=$('#attBody'); if(elem) elem.innerHTML=attBody(); }
+  else if(act === 'attDate'){ ui.attDate = t.value; const elem=$('#attBody'); if(elem) elem.innerHTML=attBody(); }
+});
+
+document.addEventListener('input', e => {
+  if(e.target.dataset.input === 'search'){
+    ui.q = e.target.value; const elem=$('#stuList'); if(elem) elem.innerHTML=stuList();
+  }
+});
+
+/* ---------- Init ---------- */
+async function init(){
+  loadLocal();
+  const splash = $('#splash');
+  if(splash){
+    await sleep(600);
+    splash.classList.add('out');
+    setTimeout(() => splash.hidden = true, 500);
+  }
+  const sess = getSession();
+  if(sess){
+    if(sess.role === 'admin'){ ui.role = 'admin'; ui.who = sess.who || 'zoya'; }
+    else if(sess.role === 'student'){ ui.role = 'student'; ui.me = sess.id; }
+  }
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
 This is my first Git Repository.
