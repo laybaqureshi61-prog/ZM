@@ -76,35 +76,35 @@
 
 <div id="app"></div>
 
+<!-- State & LocalStorage Helpers -->
 <script>
-/* ---------- State & LocalStorage Helpers ---------- */
-const DEFAULT_SETTINGS = {
-  name: "ZM Tuition",
-  place: "Old Bus Stand, Nakur",
-  phone: "9758535093",
-  adminHash: "" // Sha-256 password hash
-};
+    const DEFAULT_SETTINGS = {
+        name: "ZM tuition",
+        place: "Old Bus Stand, Nakur",
+        phone: "9758353093",
+        adminHash: "" // Sha-256 password hash
+    };
 
-const ADMINS = {
-  zoya: { name: "Zoya", subject: "Commerce" },
-  muskan: { name: "Muskan", subject: "Maths & Science" }
-};
+    const ADMISSIONS = [
+        { name: "Zoya", subject: "Commerce" },
+        { name: "Muskan", subject: "Maths & Science" }
+    ];
 
-let S = {
-  settings: DEFAULT_SETTINGS,
-  students: [],
-  batches: [
-    { id: 'b1', name: 'Class 11 & 12 Commerce', subject: 'Commerce', start: '15:00', end: '16:00', fee: 1000, teacher: 'zoya' },
-    { id: 'b2', name: 'Class 9 Maths & Science', subject: 'Maths & Science', start: '16:00', end: '17:00', fee: 500, teacher: 'muskan' },
-    { id: 'b3', name: 'Class 10 Maths & Science', subject: 'Maths & Science', start: '16:00', end: '17:00', fee: 500, teacher: 'muskan' },
-    { id: 'b4', name: 'Class 11 & 12 Maths & Science', subject: 'Maths & Science', start: '17:00', end: '18:00', fee: 1000, teacher: 'muskan' }
-  ],
-  att: {},
-  fees: [],
-  tests: [],
-  notes: [],
-  notices: []
-};
+    let S = {
+        settings: DEFAULT_SETTINGS,
+        students: [],
+        batches: [
+            { id: 'b1', name: 'Class 11 & 12 Commerce', subject: 'Commerce', start: '15:00', end: '16:00', fee: 1000, teacher: 'Zoya' },
+            { id: 'b2', name: 'Class 9 Maths & Science', subject: 'Maths & Science', start: '16:00', end: '17:00', fee: 800, teacher: 'Muskan' },
+            { id: 'b3', name: 'Class 10 Maths & Science', subject: 'Maths & Science', start: '16:00', end: '17:00', fee: 900, teacher: 'Muskan' },
+            { id: 'b4', name: 'Class 11 & 12 Maths & Science', subject: 'Maths & Science', start: '17:00', end: '18:00', fee: 1000, teacher: 'Zoya' }
+        ],
+        attn: [],
+        fees: [],
+        tests: [],
+        notes: [],
+        notices: []
+    };
 
 let ui = { role: null, me: null, tab: 'home', lwho: 'zoya', lt: 'admin', attDate: today(), attBatch: 'b1', feeMonth: ym(new Date()), calMonth: ym(new Date()), q: '' };
 
