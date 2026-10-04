@@ -155,11 +155,11 @@ function openModal(html){
   const bg = document.createElement('div');
   bg.className = 'modal-bg';
   bg.id = 'activeModal';
-  bg.innerHTML = `<div class="modal">${html}</div>`;
+  bg.innerHTML = <div class="modal">${html}</div>;
   document.body.appendChild(bg);
 }
 function closeModal(){ const m=$('#activeModal'); if(m) m.remove(); }
-function sheetHead(title){ return `<div class="sheet-head"><h3>${title}</h3><button class="btn sm" data-act="closeModal">✕</button></div>`; }
+function sheetHead(title){ return <div class="sheet-head"><h3>${title}</h3><button class="btn sm" data-act="closeModal">✕</button></div>; }
 
 function askConfirm(msg, btnText, callback){
   ui.ask = callback;
@@ -172,7 +172,7 @@ function askConfirm(msg, btnText, callback){
 }
 
 function ic(name){ return ''; } // Simplified icons placeholder
-function themeBtn(){ return `<button class="btn sm" data-act="theme">🌓</button>`; }
+function themeBtn(){ return <button class="btn sm" data-act="theme">🌓</button>; }
 
 /* ---------- Helpers & Lookup ---------- */
 function studentOf(id){ return S.students.find(x => x.id === id); }
@@ -215,11 +215,11 @@ function loginView(){
       </div>
       ${ui.lt==='admin'?`
         <label class="f">Teacher
-          <select id="lWho">${Object.keys(ADMINS).map(k=>`<option value="${k}" ${ui.lwho===k?'selected':''}>${ADMINS[k].name}</option>`).join('')}</select>
+          <select id="lWho">${Object.keys(ADMINS).map(k=><option value="${k}" ${ui.lwho===k?'selected':''}>${ADMINS[k].name}</option>).join('')}</select>
         </label>
         <label class="f">Password <input id="lPass" type="password" placeholder="Enter password"></label>
         <button class="btn primary" style="width:100%" data-act="doLogin">Login as Teacher</button>
-      `:`
+      :
         <label class="f">Roll No / Phone <input id="lStuId" placeholder="Enter Roll No or Phone"></label>
         <label class="f">Password <input id="lStuPass" type="password" placeholder="Enter Password"></label>
         <button class="btn primary" style="width:100%" data-act="doLogin">Login as Student</button>
@@ -289,7 +289,7 @@ function vAtt(){
       <label class="f">Date <input type="date" value="${ui.attDate}" data-change="attDate"></label>
       <label class="f">Batch
         <select data-change="attBatch">
-          ${S.batches.map(b=>`<option value="${b.id}" ${ui.attBatch===b.id?'selected':''}>${esc(b.name)}</option>`).join('')}
+          ${S.batches.map(b=><option value="${b.id}" ${ui.attBatch===b.id?'selected':''}>${esc(b.name)}</option>).join('')}
         </select>
       </label>
     </div>
@@ -358,14 +358,14 @@ function studentForm(id){
       <label class="f">Parent Phone <input id="fParent" value="${esc(s.parent)}"></label>
     </div>
     <div class="f"><label>Batches:</label>
-      ${S.batches.map(b => `<label style="font-weight:normal"><input type="checkbox" name="fb" value="${b.id}" ${(s.batchIds\vert{}\vert{}[]).includes(b.id)?'checked':''}>${esc(b.name)}</label>`).join('')}
+      ${S.batches.map(b => <label style="font-weight:normal"><input type="checkbox" name="fb" value="${b.id}" ${(s.batchIds\vert{}\vert{}[]).includes(b.id)?'checked':''}>${esc(b.name)}</label>).join('')}
     </div>
     <div class="row2">
       <label class="f">Monthly Fee (₹) <input id="fFee" type="number" value="${s.fee||500}"></label>
       <label class="f">Joining Month <input id="fJoin" type="month" value="${s.joined||today().slice(0,7)}"></label>
     </div>
     <div class="acts" style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-      ${id?`<button class="btn danger" data-act="delStudent" data-id="${id}">Delete</button>`:''}
+      ${id?<button class="btn danger" data-act="delStudent" data-id="${id}">Delete</button>:''}
       <button class="btn primary" data-act="saveStudent" data-id="${id||''}">Save Student</button>
     </div>`);
 }
@@ -397,7 +397,7 @@ function payForm(sid){
     <label class="f">Student
       <select id="pStu" data-change="payCalc">
         <option value="">-- Select Student --</option>
-        ${S.students.map(s => `<option value="${s.id}" ${s.id===sid?'selected':''}>${esc(s.name)} (Roll:${s.roll||'-'})</option>`).join('')}
+        ${S.students.map(s => <option value="${s.id}" ${s.id===sid?'selected':''}>${esc(s.name)} (Roll:${s.roll||'-'})</option>).join('')}
       </select>
     </label>
     <div class="row2">
@@ -472,7 +472,7 @@ function batchForm(id){
     <div class="row2">
       <label class="f">Subject <input id="bSub" value="${esc(b.subject)}"></label>
       <label class="f">Teacher
-        <select id="bTeacher">${Object.keys(ADMINS).map(k=>`<option value="${k}" ${b.teacher===k?'selected':''}>${ADMINS[k].name}</option>`).join('')}</select>
+        <select id="bTeacher">${Object.keys(ADMINS).map(k=><option value="${k}" ${b.teacher===k?'selected':''}>${ADMINS[k].name}</option>).join('')}</select>
       </label>
     </div>
     <div class="row2">
@@ -481,7 +481,7 @@ function batchForm(id){
     </div>
     <label class="f">Monthly Fee (₹) <input id="bFee" type="number" value="${b.fee||500}"></label>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-      ${id?`<button class="btn danger" data-act="delBatch" data-id="${id}">Delete</button>`:''}
+      ${id?<button class="btn danger" data-act="delBatch" data-id="${id}">Delete</button>:''}
       <button class="btn primary" data-act="saveBatch" data-id="${id||''}">Save Batch</button>
     </div>`);
 }
@@ -650,4 +650,3 @@ init();
 </script>
 </body>
 </html>
-
